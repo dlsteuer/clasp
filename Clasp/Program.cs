@@ -10,6 +10,7 @@ namespace Clasp
 	    private static IList<string> _commandHistory = new List<string>();
 	    private static int _currentHistoryIndex = -1;
 	    private static string _historyFilename;
+	    private const string Prompt = "user> ";
 
 	    static void Main(string[] args)
 		{
@@ -24,9 +25,9 @@ namespace Clasp
 			var repl = new Repl();
 			while (true)
 			{
-				Console.Write("user> ");
 			    var applicationExit = false;
-			    var input = "";
+                var input = new ConsoleLine();
+                Console.Write(Prompt);
 			    while (true)
 			    {
                     var lastChar = Console.ReadKey(true);
@@ -43,29 +44,26 @@ namespace Clasp
 
 			        if (lastChar.Key == ConsoleKey.Backspace)
 			        {
-                        Console.Write(lastChar.KeyChar);
-                        Console.Write(" ");
-                        Console.Write(lastChar.KeyChar);
-			            input = input.Substring(0, input.Length - 1);
+			            input.RemoveLastChar();
 			        }
                     else if (lastChar.Key == ConsoleKey.LeftArrow)
                     {
-                        Console.CursorLeft = Console.CursorLeft - 1;
+                        input.MoveCaretLeft();
                     }
                     else if (lastChar.Key == ConsoleKey.RightArrow)
                     {
-                        Console.CursorLeft = Console.CursorLeft + 1;
+                        input.MoveCaretRight();
                     }
                     else if (lastChar.Key == ConsoleKey.UpArrow)
                     {
-                        input = UpdateInput(input);
+                        input = new ConsoleLine(_commandHistory[_currentHistoryIndex]);
                         _currentHistoryIndex--;
                         if (_currentHistoryIndex == -1)
                             _currentHistoryIndex = 0;
                     }
                     else if (lastChar.Key == ConsoleKey.DownArrow)
                     {
-                        input = UpdateInput(input);
+                        input = new ConsoleLine(_commandHistory[_currentHistoryIndex]);
                         _currentHistoryIndex++;
                         if (_currentHistoryIndex == _commandHistory.Count)
                             _currentHistoryIndex = _commandHistory.Count - 1;
@@ -80,14 +78,18 @@ namespace Clasp
                         Console.ForegroundColor = foreground;
                         foreach (var str in _commandHistory)
                             Console.WriteLine(str);
-                        input = "";
+                        input = new ConsoleLine();
                         break;
                     }
 			        else
 			        {
-                        Console.Write(lastChar.KeyChar);
                         input += lastChar.KeyChar;   
 			        }
+
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.Write(Prompt);
+                    Console.Write(input + new string(' ', Console.WindowWidth - input.Length - Prompt.Length - 1));
+                    Console.SetCursorPosition(Prompt.Length + input.CaretPosition, Console.CursorTop);
 			    }
 
 				if (applicationExit)
@@ -106,16 +108,6 @@ namespace Clasp
 				repl.Run(input);
 			}
 		}
-
-	    private static string UpdateInput(string input)
-	    {
-	        Console.CursorLeft = Console.CursorLeft - input.Length;
-	        Console.Write(new string(' ', input.Length));
-	        Console.CursorLeft = Console.CursorLeft - input.Length;
-	        input = _commandHistory[_currentHistoryIndex];
-	        Console.Write(input);
-	        return input;
-	    }
 
 	    private static void SaveCommandHistory(object sender, EventArgs args)
 	    {

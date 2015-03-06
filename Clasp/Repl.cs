@@ -4,17 +4,17 @@ namespace Clasp
 {
     internal class Repl
     {
-        private string Read(string input)
+        private SyntaxTree Read(string input)
+        {
+            return SyntaxTree.Parse(input);
+        }
+
+        private SyntaxTree Eval(SyntaxTree input)
         {
             return input;
         }
 
-        private string Eval(string input)
-        {
-            return input;
-        }
-
-        private void Print(string input)
+        private void Print(SyntaxTree input)
         {
             Console.WriteLine(input);
         }
